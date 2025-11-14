@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>为你 — 圣诞惊喜 🎄✨</title>
+<link rel="icon" href="https://raw.githubusercontent.com/EgoistDeveloper/emoji-favicon/main/emoji/1f384.png">
+<style>
+  :root{
+    --bg1:#040812;
+    --bg2:#071a2f;
+    --glass: rgba(255,255,255,0.06);
+    --accent:#ffd86b;
+    --rose:#ff6b8a;
+    --gold:#ffcf66;
+    --soft:#ffffff;
+  }
+  html,body{height:100%;margin:0;font-family: "Helvetica Neue", Arial, sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--soft);-webkit-font-smoothing:antialiased;overflow:hidden;}
+  /* cinematic overlay */
+  #cinema{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:60;
+    background:radial-gradient(circle at 50% 30%, rgba(0,0,0,0.2), rgba(0,0,0,0.7));
+    transition:opacity 0.9s ease;
+  }
+  #logo{
+    text-align:center;transform:translateY(0);
+  }
+  #logo h2{font-size:26px;margin:0 0 12px;letter-spacing:6px;opacity:0.95}
+  #logo p{margin:0;opacity:0.85}
+  /* envelope */
+  .envelope-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+  .envelope{
+    width:220px;height:140px;background:linear-gradient(180deg,#ff5b5b,#c43a3a);
+    border-radius:10px;position:relative;box-shadow:0 18px 40px rgba(0,0,0,0.6);
+    transform-origin:center;cursor:pointer;
+  }
+  .envelope .flap{
+    position:absolute;left:0;right:0;top:0;height:70px;background:linear-gradient(180deg,#ff7b7b,#ff5757);
+    clip-path:polygon(0 0,100% 0,50% 100%);
+    border-top-left-radius:10px;border-top-right-radius:10px;box-shadow:inset 0 -6px 18px rgba(0,0,0,0.12);
+  }
+  /* hero content */
+  .stage{position:relative;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:60px;gap:18px}
+  .title{font-size:40px;font-weight:700;text-align:center;letter-spacing:2px;text-shadow:0 8px 30px rgba(0,0,0,0.6)}
+  .subtitle{opacity:0.9;font-size:15px}
+  /* card */
+  .card{width:92%;max-width:720px;margin:0 auto;background:var(--glass);border-radius:18px;padding:22px;backdrop-filter:blur(12px);box-shadow:0 18px 60px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.04)}
+  .row{display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:center}
+  .btn{padding:12px 18px;border-radius:14px;border:none;background:linear-gradient(90deg,var(--gold),#ffab3b);color:#111;font-weight:800;cursor:pointer;box-shadow:0 10px 30px rgba(255,170,80,0.12)}
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.08);color:var(--soft);padding:10px 14px;border-radius:12px;cursor:pointer}
+  /* tree area */
+  .tree-area{display:flex;gap:20px;align-items:flex-start;justify-content:center;padding:20px 10px}
+  svg.tree{width:220px;height:auto;filter:drop-shadow(0 12px 30px rgba(0,0,0,0.6))}
+  /* typed message */
+  .typed{margin-top:14px;font-size:18px;text-align:center;min-height:38px}
+  .heart{font-size:32px;color:#ff6b8a;text-shadow:0 6px 18px rgba(255,110,140,0.12);display:inline-block;transform-origin:center}
+  /* fireworks canvas */
+  canvas#fx{position:fixed;top:0;left:0;width:100%;height:100%;z-index:30;pointer-events:none}
+  /* confetti container */
+  .confetti{position:fixed;inset:0;z-index:35;pointer-events:none}
+  /* footer small */
+  .small{font-size:12px;opacity:0.7;text-align:center;margin-top:12px}
+  /* mobile tweaks */
+  @media(max-width:520px){
+    .title{font-size:28px}
+    .envelope{width:180px;height:120px}
+    .card{padding:14px;border-radius:12px}
+    .btn{padding:10px 14px}
+  }
+</style>
+</head>
+<body>
+
+<!-- fireworks canvas -->
+<canvas id="fx"></canvas>
+<div class="confetti" id="confetti"></div>
+
+<!-- cinematic cover -->
+<div id="cinema" aria-hidden="false">
+  <div id="logo" class="envelope-wrap" role="button" tabindex="0" aria-label="打开礼物">
+    <h2>For You — To Open</h2>
+    <p>点按信封或任意位置，开始你的圣诞惊喜</p>
+    <div class="envelope" id="envelope" title="点我开启惊喜">
+      <div class="flap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- main stage -->
+<section class="stage" aria-hidden="true" id="mainStage">
+  <div class="title">🎄 今夜，为你点亮一盏星灯</div>
+  <div class="subtitle">打开后有音乐、烟花、祝福与为你写的一段悄悄话</div>
+
+  <div class="card" role="region" aria-label="圣诞祝福卡">
+    <div class="tree-area" aria-hidden="false">
+      <!-- svg tree with lights -->
+      <svg class="tree" viewBox="0 0 200 260" aria-hidden="true">
+        <defs>
+          <radialGradient id="g1" cx="50%" cy="30%" r="80%"><stop offset="0%" stop-color="#e8ffb3"/><stop offset="100%" stop-color="#2e8b57"/></radialGradient>
+          <filter id="glow2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <rect x="88" y="210" width="24" height="34" rx="3" fill="#8b5a2b"></rect>
+        <g filter="url(#glow2)">
+          <path d="M100 18 L40 110 L160 110 Z" fill="#2ecc71"/>
+          <path d="M100 60 L30 150 L170 150 Z" fill="#27ae60"/>
+          <path d="M100 100 L20 190 L180 190 Z" fill="#219150"/>
+        </g>
+        <!-- lights -->
+        <circle class="orn" cx="100" cy="40" r="4" fill="#ffd166"></circle>
+        <circle class="orn" cx="70" cy="95" r="4" fill="#ff8fa3"></circle>
+        <circle class="orn" cx="130" cy="95" r="4" fill="#80ffdb"></circle>
+        <circle class="orn" cx="55" cy="150" r="4" fill="#74c0fc"></circle>
+        <circle class="orn" cx="145" cy="150" r="4" fill="#ffb4a2"></circle>
+        <circle cx="100" cy="8" r="6" fill="#ffd166"></circle>
+      </svg>
+
+      <!-- decoration / summary -->
+      <div style="flex:1">
+        <h3 style="margin:0 0 8px">给肖芷萱的一份圣诞礼</h3>
+        <p style="margin:0 0 12px;opacity:0.9">播放音乐 ▶ 点燃烟花 ▶ 看到专属悄悄话</p>
+        <div class="row">
+          <button class="btn" id="playAll">Play · 启动全部体验</button>
+          <button class="btn-ghost" id="replay">重看开场</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="typed" id="typedArea" aria-live="polite"></div>
+    <div class="small">提示：若无法自动播放，请点“Play · 启动全部体验”按钮以解锁声音与动画。</div>
+  </div>
+
+  <div style="height:34px"></div>
+</section>
+
+<script>
+/* Helper utilities */
+const $ = (sel)=>document.querySelector(sel);
+
+/* --- canvas for fireworks --- */
+const fx = document.getElementById('fx');
+const ctx = fx.getContext('2d');
+function resizeCanvas(){
+  fx.width = innerWidth; fx.height = innerHeight;
+}
+resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+
+let fireworks = []; // particles
+function rand(min,max){return Math.random()*(max-min)+min;}
+class Firework{
+  constructor(x,y,tx,ty,color){
+    this.x=x; this.y=y; this.tx=tx; this.ty=ty; this.vx=(tx-x)/30; this.vy=(ty-y)/30; this.color=color;
+    this.age=0; this.exploded=false;
+  }
+  step(){
+    if(!this.exploded){
+      this.x += this.vx; this.y += this.vy; this.age++;
+      if(this.age>28){this.exploded=true; this.explode();}
+    }
+  }
+  explode(){
+    for(let i=0;i<40;i++){
+      particles.push(new Particle(this.x,this.y,this.color));
+    }
+  }
+}
+class Particle{
+  constructor(x,y,color){
+    this.x=x; this.y=y; this.vx=rand(-4,4); this.vy=rand(-6,2); this.alpha=1; this.color=color;
+  }
+  step(){
+    this.x += this.vx; this.y += this.vy; this.vy += 0.08; this.alpha -= 0.015;
+  }
+  draw(){
+    ctx.globalAlpha = Math.max(this.alpha,0);
+    ctx.beginPath(); ctx.fillStyle=this.color; ctx.arc(this.x,this.y,2.6,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+let particles = [];
+function launchFirework(){
+  const sx = rand(innerWidth*0.2, innerWidth*0.8);
+  const sy = innerHeight;
+  const tx = rand(innerWidth*0.2, innerWidth*0.8);
+  const ty = rand(innerHeight*0.15, innerHeight*0.45);
+  const color = ['#ffd166','#ff8fa3','#80ffdb','#ffd8a8','#b3ffcc'][Math.floor(rand(0,5))];
+  fireworks.push(new Firework(sx,sy,tx,ty,color));
+}
+function animateFx(){
+  ctx.clearRect(0,0,fx.width,fx.height);
+  for(let i=0;i<fireworks.length;i++){ fireworks[i].step(); }
+  for(let i=fireworks.length-1;i>=0;i--){ if(fireworks[i].exploded) fireworks.splice(i,1); }
+  for(let i=particles.length-1;i>=0;i--){
+    particles[i].step(); particles[i].draw();
+    if(particles[i].alpha<=0) particles.splice(i,1);
+  }
+  requestAnimationFrame(animateFx);
+}
+animateFx();
+
+/* confetti (DOM) */
+const confettiRoot = document.getElementById('confetti');
+function burstConfetti(){
+  for(let i=0;i<80;i++){
+    const el = document.createElement('div');
+    el.style.position='absolute';
+    el.style.left = rand(5,95)+'%';
+    el.style.top = rand(10,40)+'%';
+    el.style.fontSize = (6+Math.random()*18)+'px';
+    el.style.opacity = 1;
+    el.style.transform = 'rotate(' + rand(0,360) + 'deg)';
+    el.style.transition = 'transform 1.8s cubic-bezier(.2,.9,.2,1), opacity 1.8s ease';
+    el.textContent = ['✨','❄️','❇️','★'][Math.floor(rand(0,4))];
+    confettiRoot.appendChild(el);
+    setTimeout(()=>{ el.style.transform = 'translateY(' + rand(30,120) + 'vh) rotate(' + rand(360,1440) + 'deg)'; el.style.opacity=0; }, 40);
+    setTimeout(()=>{ if(el.parentNode) el.parentNode.removeChild(el); }, 2200);
+  }
+}
+
+/* typed text (slow reveal) */
+const typedArea = $('#typedArea');
+const secretLines = [
+  "亲爱的肖芷萱，",
+  "这一份圣诞礼物，装着温柔与星光。",
+  "愿你在每一个冬夜都被温暖包围，愿你想要的都慢慢来到你身边。",
+  "这是我为你准备的小小惊喜，希望它能让你微笑。",
+  "—— 送上最温柔的圣诞。"
+];
+function typeLines(lines, idx=0){
+  if(idx>=lines.length) return;
+  let line = lines[idx];
+  typedArea.innerHTML = '';
+  let i=0;
+  function step(){
+    if(i<=line.length){ typedArea.innerHTML = line.slice(0,i) + (i%2?'<span class="heart">❤</span>':''); i++; setTimeout(step, 36); }
+    else { setTimeout(()=>typeLines(lines, idx+1), 700); }
+  }
+  step();
+}
+
+/* audio */
+let bg = new Audio("https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Scott_Holmes/Happy_Music/Scott_Holmes_-_03_-_Happy_Music.mp3");
+bg.loop = true;
+bg.preload = 'auto';
+bg.volume = 0.8;
+
+/* interaction flow */
+const cinema = $('#cinema');
+const envelope = $('#envelope');
+const mainStage = $('#mainStage');
+let started = false;
+
+function startExperience(){
+  if(started) return; started = true;
+  // cinematic out
+  cinema.style.transition = 'opacity 0.9s ease'; cinema.style.opacity = 0;
+  setTimeout(()=>{ cinema.style.display = 'none'; mainStage.setAttribute('aria-hidden','false'); mainStage.scrollIntoView({behavior:"smooth"}); }, 900);
+  // play small chime then music
+  chime();
+  setTimeout(()=>{ try{ bg.play(); }catch(e){} }, 900);
+  // typed text
+  setTimeout(()=>{ typeLines(secretLines); }, 1200);
+  // fireworks + confetti bursts
+  let bursts = 0;
+  const burstInterval = setInterval(()=>{
+    launchFirework(); burstConfetti(); bursts++;
+    if(bursts>6){ clearInterval(burstInterval); }
+  }, 700);
+}
+// small chime using WebAudio for better immediate feedback
+function chime(){
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    const now = ctx.currentTime;
+    const freqs = [784,988,1175];
+    freqs.forEach((f,i)=>{
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type='sine'; o.frequency.value = f;
+      g.gain.value = 0.0001; o.connect(g); g.connect(ctx.destination);
+      o.start(now + i*0.12);
+      g.gain.linearRampToValueAtTime(0.16, now + i*0.12 + 0.02);
+      g.gain.linearRampToValueAtTime(0.0001, now + i*0.12 + 0.14);
+      o.stop(now + i*0.12 + 0.16);
+    });
+  }catch(e){}
+}
+
+/* open handlers */
+envelope.addEventListener('click', startExperience);
+cinema.addEventListener('click', startExperience);
+envelope.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') startExperience(); });
+
+/* playAll button */
+$('#playAll').addEventListener('click', ()=>{
+  startExperience();
+});
+
+/* replay open animation */
+$('#replay').addEventListener('click', ()=>{
+  // show cinema again briefly
+  cinema.style.display = 'flex'; cinema.style.opacity = 1; started=false;
+  // clear typed area
+  typedArea.innerHTML='';
+  // stop audio and particles
+  try{ bg.pause(); bg.currentTime=0; }catch(e){}
+  particles = []; fireworks = []; // deref arrays
+  setTimeout(()=>{ /* auto-start again */ }, 120);
+});
+
+/* keyboard accessibility: press R to replay, F to launch one firework */
+window.addEventListener('keydown',(e)=>{
+  if(e.key=='r' || e.key=='R') $('#replay').click();
+  if(e.key=='f' || e.key=='F'){ launchFirework(); burstConfetti(); }
+});
+
+/* Auto-launch small gentle fireworks periodically even after experience */
+setInterval(()=>{ if(started) launchFirework(); }, 2800);
+
+/* small UX: attempt autoplay on load (most browsers block, but try) */
+window.addEventListener('load', ()=>{ try{ bg.play().then(()=>{ bg.pause(); bg.currentTime=0; }).catch(()=>{}); }catch(e){} });
+
+</script>
+</body>
+</html>
